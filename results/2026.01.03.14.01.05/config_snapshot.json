@@ -1,0 +1,66 @@
+{
+  "RUN_TAG": "2026.01.03.14.01.05",
+  "DATA_PATH": "D:\\Program Files x86\\A Study File\\mycode\\NOT_LSTM\\data\\raw\\cz_drill.xlsx",
+  "OUT_DIR": "D:\\Program Files x86\\A Study File\\mycode\\NOT_LSTM\\results\\2026.01.03.14.01.05",
+  "RANDOM_STATE": 42,
+  "KFOLD_SPLITS": 5,
+  "GROUPK_SPLITS_MAX": 4,
+  "TASKS": {
+    "Task_A: 5->UCS": {
+      "X": [
+        "钻速(mm/s)",
+        "角速度(1/s)",
+        "推力(kN)",
+        "扭矩(N·m)",
+        "岩石可钻性指数"
+      ],
+      "Y": [
+        "单轴抗压强度(MPa)"
+      ]
+    },
+    "Task_B: 4->[Id,UCS]": {
+      "X": [
+        "钻速(mm/s)",
+        "角速度(1/s)",
+        "推力(kN)",
+        "扭矩(N·m)"
+      ],
+      "Y": [
+        "岩石可钻性指数",
+        "单轴抗压强度(MPa)"
+      ]
+    }
+  },
+  "MODEL_PARAMS": {
+    "MLP": {
+      "hidden_layer_sizes": [
+        64,
+        32
+      ],
+      "activation": "relu",
+      "solver": "adam",
+      "alpha": 0.0001,
+      "learning_rate_init": 0.001,
+      "max_iter": 3000,
+      "early_stopping": true,
+      "n_iter_no_change": 40
+    },
+    "SVR": {
+      "C": 50,
+      "epsilon": 0.05,
+      "kernel": "rbf"
+    },
+    "Random_Forest": {
+      "n_estimators": 800
+    },
+    "XGBoost": {
+      "n_estimators": 1200,
+      "learning_rate": 0.03,
+      "max_depth": 6,
+      "subsample": 0.9,
+      "colsample_bytree": 0.9,
+      "reg_lambda": 1.0
+    }
+  },
+  "python_datetime": "2026-01-03T14:01:05"
+}

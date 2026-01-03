@@ -1,0 +1,14 @@
+2026-01-03 14:01:05,468 | INFO | === RUN START ===
+2026-01-03 14:01:05,468 | INFO | DATA_PATH: D:\Program Files x86\A Study File\mycode\NOT_LSTM\data\raw\cz_drill.xlsx
+2026-01-03 14:01:05,468 | INFO | OUT_DIR  : D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.14.01.05
+2026-01-03 14:01:05,643 | INFO | Loaded data: rows=36, cols=12
+2026-01-03 14:01:05,659 | INFO | Models: ['MLP', 'SVR', 'Random_Forest', 'XGBoost']
+2026-01-03 14:01:05,661 | INFO | [Task_A: 5->UCS] X=['钻速(mm/s)', '角速度(1/s)', '推力(kN)', '扭矩(N·m)', '岩石可钻性指数'], Y=['单轴抗压强度(MPa)'] | after clean: n=36
+2026-01-03 14:01:05,661 | INFO | [Task_A: 5->UCS] Running KFold (n_splits=5) ...
+2026-01-03 14:01:09,364 | INFO | [Task_A: 5->UCS] Running GroupKFold (n_splits=4, n_groups=4) ...
+2026-01-03 14:01:12,955 | INFO | [Task_B: 4->[Id,UCS]] X=['钻速(mm/s)', '角速度(1/s)', '推力(kN)', '扭矩(N·m)'], Y=['岩石可钻性指数', '单轴抗压强度(MPa)'] | after clean: n=36
+2026-01-03 14:01:12,955 | INFO | [Task_B: 4->[Id,UCS]] Running KFold (n_splits=5) ...
+2026-01-03 14:01:20,539 | INFO | [Task_B: 4->[Id,UCS]] Running GroupKFold (n_splits=4, n_groups=4) ...
+2026-01-03 14:01:24,815 | INFO | Saved OOF predictions: D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.14.01.05\artifacts\oof_predictions.csv
+2026-01-03 14:01:24,815 | WARNING | Figure generation skipped: No module named 'matplotlib'
+2026-01-03 14:01:24,816 | INFO | Saved long CV results: D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.14.01.05\cv_results_long.csv

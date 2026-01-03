@@ -1,0 +1,14 @@
+2026-01-03 11:22:59,697 | INFO | === RUN START ===
+2026-01-03 11:22:59,697 | INFO | DATA_PATH: D:\Program Files x86\A Study File\mycode\NOT_LSTM\data\raw\cz_drill.xlsx
+2026-01-03 11:22:59,697 | INFO | OUT_DIR  : D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.11.22.59
+2026-01-03 11:22:59,859 | INFO | Loaded data: rows=36, cols=12
+2026-01-03 11:22:59,876 | INFO | Models: ['MLP', 'SVR', 'Random_Forest', 'XGBoost']
+2026-01-03 11:22:59,877 | INFO | [Task_A: 5->UCS] X=['钻速(mm/s)', '角速度(1/s)', '推力(kN)', '扭矩(N·m)', '岩石可钻性指数'], Y=['单轴抗压强度(MPa)'] | after clean: n=36
+2026-01-03 11:22:59,877 | INFO | [Task_A: 5->UCS] Running KFold (n_splits=5) ...
+2026-01-03 11:23:03,558 | INFO | [Task_A: 5->UCS] Running GroupKFold (n_splits=4, n_groups=4) ...
+
+
+2026-01-03 11:23:06,688 | INFO | [Task_B: 4->[Id,UCS]] X=['钻速(mm/s)', '角速度(1/s)', '推力(kN)', '扭矩(N·m)'], Y=['岩石可钻性指数', '单轴抗压强度(MPa)'] | after clean: n=36
+2026-01-03 11:23:06,688 | INFO | [Task_B: 4->[Id,UCS]] Running KFold (n_splits=5) ...
+2026-01-03 11:23:11,294 | INFO | [Task_B: 4->[Id,UCS]] Running GroupKFold (n_splits=4, n_groups=4) ...
+2026-01-03 11:23:15,193 | INFO | Saved long CV results: D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.11.22.59\cv_results_long.csv
