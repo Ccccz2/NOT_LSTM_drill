@@ -1,7 +1,0 @@
-2026-01-03 13:58:10,657 | INFO | === RUN START ===
-2026-01-03 13:58:10,657 | INFO | DATA_PATH: D:\Program Files x86\A Study File\mycode\NOT_LSTM\data\raw\cz_drill.xlsx
-2026-01-03 13:58:10,657 | INFO | OUT_DIR  : D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.13.58.10
-2026-01-03 13:58:10,823 | INFO | Loaded data: rows=36, cols=12
-2026-01-03 13:58:10,840 | INFO | Models: ['MLP', 'SVR', 'Random_Forest', 'XGBoost']
-2026-01-03 13:58:10,841 | INFO | [Task_A: 5->UCS] X=['钻速(mm/s)', '角速度(1/s)', '推力(kN)', '扭矩(N·m)', '岩石可钻性指数'], Y=['单轴抗压强度(MPa)'] | after clean: n=36
-2026-01-03 13:58:10,841 | INFO | [Task_A: 5->UCS] Running KFold (n_splits=5) ...

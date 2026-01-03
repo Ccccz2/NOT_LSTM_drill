@@ -6,6 +6,7 @@ from sklearn.base import clone
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.ensemble import RandomForestRegressor
 
+
 from .metrics import to_2d, eval_metrics_1d
 
 @dataclass
@@ -20,6 +21,8 @@ class AggRow:
 
 def wrap_multioutput(model, n_targets: int):
     if n_targets <= 1:
+        return model
+    if isinstance(model, MultiOutputRegressor):
         return model
     if isinstance(model, RandomForestRegressor):
         return model

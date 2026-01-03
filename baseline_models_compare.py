@@ -8,6 +8,12 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.multioutput import MultiOutputRegressor
+
+'''
+现在的部分已经由run_all文件实现，本文件可以不使用，目前已经将task A对齐，可以实现单目标对照，task B的多输出还没有调整好
+'''
+
 
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
@@ -24,7 +30,23 @@ except Exception:
 # 0. 配置区（分类数据X与Y）
 # =========================
 DATA_PATH = r"cz_drill.xlsx"  # 运行脚本时放同目录；或写完整路径
-TARGET_COL = -1              # 默认最后一列为标签；或写列名，如 "drillability"
+COL_V   = "钻速(mm/s)"
+COL_W   = "角速度(1/s)"
+COL_F   = "推力(kN)"
+COL_TQ  = "扭矩(N·m)"
+COL_ID  = "岩石可钻性指数"
+COL_UCS = "单轴抗压强度(MPa)"
+
+TASKS = {
+    "Task_A_5toUCS": {
+        "X": [COL_V, COL_W, COL_F, COL_TQ, COL_ID],
+        "Y": [COL_UCS],
+    },
+    "Task_B_4toIdUCS": {
+        "X": [COL_V, COL_W, COL_F, COL_TQ],
+        "Y": [COL_ID, COL_UCS],
+    },
+}
 GROUP_COL_CANDIDATES = ["group", "Group", "GROUP", "set", "Set", "SET"]  # 若存在分组列则启用GroupKFold
 SEED = 42
 
@@ -77,19 +99,7 @@ def pick_group_column(df):
 df = pd.read_excel(DATA_PATH)
 
 # 处理 TARGET_COL（支持索引或列名）
-if isinstance(TARGET_COL, int):
-    y = df.iloc[:, TARGET_COL]
-    X = df.drop(df.columns[TARGET_COL], axis=1)
-else:
-    y = df[TARGET_COL]
-    X = df.drop(columns=[TARGET_COL])
-
-# 如果存在明显“分组列”，取出来做GroupKFold（可选）
-group_col = pick_group_column(df)
-groups = df[group_col] if group_col is not None else None
-
-# 仅保留数值特征（如果有非数值列，先丢弃）
-X = X.select_dtypes(include=[np.number])
+df = pd.read_excel(DATA_PATH)
 
 # =========================
 # 3. 统一预处理（缺失值 + 标准化）
@@ -209,61 +219,69 @@ models["MLP"] = {
 all_summary = []
 all_folds = []
 
-for name, cfg in models.items():
-    print(f"\n=== {name} ===")
 
-    pipe = cfg["pipeline"]
-    grid = cfg["param_grid"]
+for task_name, spec in TASKS.items():
+    X = df[spec["X"]].copy()
+    Y = df[spec["Y"]].copy()
 
-    # 用R2作为搜索目标（你也可以改成neg_root_mean_squared_error）
-    search = GridSearchCV(
-        estimator=pipe,
-        param_grid=grid,
-        scoring="r2",
-        cv=cv_for_search,
-        n_jobs=-1
-    )
+    X = X.select_dtypes(include=[np.number])
+    Y = Y.select_dtypes(include=[np.number])
 
-    if groups is not None and groups.nunique() >= 2:
-        search.fit(X, y, model__sample_weight=None, **{"groups": groups})
-    else:
-        search.fit(X, y)
+    for name, cfg in models.items():
+        print(f"\n=== {name} ===")
 
-    print("Best params:", search.best_params_)
-    print("Best CV R2:", search.best_score_)
+        pipe = cfg["pipeline"]
+        grid = cfg["param_grid"]
 
-    # 外层折评估（为了报告稳定）
-    if groups is not None and groups.nunique() >= 2:
-        folds_df = evaluate_cv(search.best_estimator_, X, y, cv_outer if hasattr(cv_outer, "split") else cv_outer)
-        # GroupKFold需要groups，这里重写一下split
-        rows = []
-        fold = 0
-        for train_idx, test_idx in cv_outer.split(X, y, groups=groups):
-            fold += 1
-            X_tr, X_te = X.iloc[train_idx], X.iloc[test_idx]
-            y_tr, y_te = y.iloc[train_idx], y.iloc[test_idx]
-            m = search.best_estimator_
-            m.fit(X_tr, y_tr)
-            pred = m.predict(X_te)
-            rows.append({"fold": fold, "R2": r2_score(y_te, pred), "RMSE": rmse(y_te, pred), "MAE": mean_absolute_error(y_te, pred)})
-        folds_df = pd.DataFrame(rows)
-        mean_row = folds_df[["R2", "RMSE", "MAE"]].mean().to_dict()
-        mean_row["fold"] = "mean"
-        folds_df = pd.concat([folds_df, pd.DataFrame([mean_row])], ignore_index=True)
-    else:
-        folds_df = evaluate_cv(search.best_estimator_, X, y, cv_outer)
+        # 用R2作为搜索目标（你也可以改成neg_root_mean_squared_error）
+        search = GridSearchCV(
+            estimator=pipe,
+            param_grid=grid,
+            scoring="r2",
+            cv=cv_for_search,
+            n_jobs=-1
+        )
 
-    folds_df.insert(0, "model", name)
-    all_folds.append(folds_df)
+        if groups is not None and groups.nunique() >= 2:
+            search.fit(X, y, model__sample_weight=None, **{"groups": groups})
+        else:
+            search.fit(X, y)
 
-    mean_metrics = folds_df[folds_df["fold"] == "mean"].iloc[0].to_dict()
-    all_summary.append({
-        "model": name,
-        "R2_mean": mean_metrics["R2"],
-        "RMSE_mean": mean_metrics["RMSE"],
-        "MAE_mean": mean_metrics["MAE"],
-        "best_params": str(search.best_params_)
-    })
+        print("Best params:", search.best_params_)
+        print("Best CV R2:", search.best_score_)
+
+        # 外层折评估（为了报告稳定）
+        if groups is not None and groups.nunique() >= 2:
+            folds_df = evaluate_cv(search.best_estimator_, X, y, cv_outer if hasattr(cv_outer, "split") else cv_outer)
+            # GroupKFold需要groups，这里重写一下split
+            rows = []
+            fold = 0
+            for train_idx, test_idx in cv_outer.split(X, y, groups=groups):
+                fold += 1
+                X_tr, X_te = X.iloc[train_idx], X.iloc[test_idx]
+                y_tr, y_te = y.iloc[train_idx], y.iloc[test_idx]
+                m = search.best_estimator_
+                m.fit(X_tr, y_tr)
+                pred = m.predict(X_te)
+                rows.append({"fold": fold, "R2": r2_score(y_te, pred), "RMSE": rmse(y_te, pred), "MAE": mean_absolute_error(y_te, pred)})
+            folds_df = pd.DataFrame(rows)
+            mean_row = folds_df[["R2", "RMSE", "MAE"]].mean().to_dict()
+            mean_row["fold"] = "mean"
+            folds_df = pd.concat([folds_df, pd.DataFrame([mean_row])], ignore_index=True)
+        else:
+            folds_df = evaluate_cv(search.best_estimator_, X, y, cv_outer)
+
+        folds_df.insert(0, "model", name)
+        all_folds.append(folds_df)
+
+        mean_metrics = folds_df[folds_df["fold"] == "mean"].iloc[0].to_dict()
+        all_summary.append({
+            "model": name,
+            "R2_mean": mean_metrics["R2"],
+            "RMSE_mean": mean_metrics["RMSE"],
+            "MAE_mean": mean_metrics["MAE"],
+            "best_params": str(search.best_params_)
+        })
 
 # 汇总
 summary_df = pd.DataFrame(all_summary).sort_values(by="RMSE_mean", ascending=True)

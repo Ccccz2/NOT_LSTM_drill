@@ -9,12 +9,9 @@ def build_models(random_state: int, params: dict):
         "SVR": build_svr(random_state, params.get("SVR", {})),
         "Random_Forest": build_rf(random_state, params.get("Random_Forest", {})),
     }
-
-    # XGBoost 可选
     try:
         from .XGBoost.XGBoost_model import build as build_xgb
         models["XGBoost"] = build_xgb(random_state, params.get("XGBoost", {}))
     except Exception:
         print("[WARN] xgboost 未安装或不可用：将跳过 XGBoost。")
-
     return models

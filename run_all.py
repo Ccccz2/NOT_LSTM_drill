@@ -17,23 +17,80 @@ Single entry point:
 
 from __future__ import annotations
 
-import json
-from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold, GroupKFold
+from sklearn.model_selection import GridSearchCV
 
 import config as CFG
 from models import build_models
 
 from utils.data import load_data, assert_columns, clean_xy
-from utils.cv import run_cv
+from utils.cv import run_cv, wrap_multioutput
 from utils.tables import build_summary_table, save_latex_table, save_word_tables
 from utils.io import ensure_dir, setup_logger, save_config_snapshot
 
+
+def tune_models(models: dict, X_df: pd.DataFrame, Y_df: pd.DataFrame,
+                cv, groups, cfg, logger, tag: str, out_dir: Path):
+    """
+    对每个模型做 GridSearchCV，返回 tuned_models + tuning_df
+    """
+    rows = []
+    tuned = {}
+
+    for name, est in models.items():
+        grid = cfg.PARAM_GRIDS.get(name, None)
+
+        if not grid:
+            tuned[name] = est
+            rows.append({"model": name, "tuned": False, "best_score": None, "best_params": None})
+            logger.info(f"[TUNING][{tag}] {name}: no grid -> skipped")
+            continue
+
+        n_targets = 1 if isinstance(Y_df, pd.Series) else int(getattr(Y_df, "shape", [0, 1])[1])
+        est_for_search = wrap_multioutput(est, n_targets)
+
+        grid_for_search = grid
+        if n_targets > 1 and hasattr(est_for_search, "estimator"):
+            grid_for_search = {f"estimator__{k}": v for k, v in grid.items()}
+
+        gs = GridSearchCV(
+            estimator=est_for_search,
+            param_grid=grid_for_search,
+            scoring=cfg.TUNING_SCORING,
+            cv=cv,
+            n_jobs=cfg.TUNING_N_JOBS,
+        )
+
+        if isinstance(Y_df, pd.DataFrame) and Y_df.shape[1] == 1:
+            y_fit = Y_df.iloc[:, 0].to_numpy().ravel()
+        else:
+            y_fit = Y_df  # 多目标保持二维
+
+        if groups is None:
+            gs.fit(X_df, y_fit)
+        else:
+            gs.fit(X_df, y_fit, groups=groups)
+
+        tuned[name] = gs.best_estimator_
+        rows.append({
+            "model": name,
+            "tuned": True,
+            "best_score": float(gs.best_score_),
+            "best_params": str(gs.best_params_),
+        })
+        logger.info(f"[TUNING][{tag}] {name}: best_score={gs.best_score_:.4f}, best_params={gs.best_params_}")
+
+    tuning_df = pd.DataFrame(rows)
+    out_path = out_dir / f"tuning_{tag}.csv"
+    tuning_df.to_csv(out_path, index=False, encoding="utf-8-sig")
+    logger.info(f"[TUNING] saved: {out_path}")
+
+    return tuned, tuning_df
 
 def _get_groups_for_ucs(Y_df: pd.DataFrame) -> np.ndarray:
     # GroupKFold groups: UCS 近似区间避免浮点数浮动
@@ -126,10 +183,26 @@ def main():
         # 3.1 KFold
         kf = KFold(n_splits=CFG.KFOLD_SPLITS, shuffle=True, random_state=CFG.RANDOM_STATE)
         logger.info(f"[{task_name}] Running KFold (n_splits={CFG.KFOLD_SPLITS}) ...")
+
+        models_for_run = models
+        if getattr(CFG, "ENABLE_TUNING", False):
+            tag = f"{task_name}_KFold"
+            models_for_run, _ = tune_models(
+                models=models,
+                X_df=X_df,
+                Y_df=Y_df,
+                cv=kf,
+                groups=None,
+                cfg=CFG,
+                logger=logger,
+                tag=tag,
+                out_dir=paths["artifacts"],
+            )
+
         long_k, oof_k = run_cv(
             X=X_df,
             Y=Y_df,
-            models=models,
+            models=models_for_run,
             task_name=task_name,
             eval_scheme="KFold",
             splitter=kf,
@@ -148,10 +221,26 @@ def main():
             else:
                 gkf = GroupKFold(n_splits=n_splits)
                 logger.info(f"[{task_name}] Running GroupKFold (n_splits={n_splits}, n_groups={n_groups}) ...")
+
+                models_for_run = models
+                if getattr(CFG, "ENABLE_TUNING", False):
+                    tag = f"{task_name}_GroupKFold"
+                    models_for_run, _ = tune_models(
+                        models=models,
+                        X_df=X_df,
+                        Y_df=Y_df,
+                        cv=gkf,
+                        groups=groups,
+                        cfg=CFG,
+                        logger=logger,
+                        tag=tag,
+                        out_dir=paths["artifacts"],
+                    )
+
                 long_g, oof_g = run_cv(
                     X=X_df,
                     Y=Y_df,
-                    models=models,
+                    models=models_for_run,
                     task_name=task_name,
                     eval_scheme="GroupKFold(UCS)",
                     splitter=gkf,
@@ -211,6 +300,7 @@ def main():
                     .replace("|", "_")
                     .replace(" ", "")
                     .replace("/", "_")
+                    .replace("(", "").replace(")", "")
                 )
                 plt.tight_layout()
                 plt.savefig(paths["figures"] / fname, dpi=220)
