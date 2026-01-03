@@ -1,0 +1,5 @@
+﻿model,tuned,best_score,best_params
+MLP,True,-4.928969168591637,"{'estimator__model__activation': 'tanh', 'estimator__model__alpha': 0.001, 'estimator__model__hidden_layer_sizes': (16,), 'estimator__model__learning_rate_init': 0.0001}"
+SVR,True,-8.162393560837305,"{'estimator__model__C': 10, 'estimator__model__epsilon': 0.01, 'estimator__model__gamma': 'scale'}"
+Random_Forest,True,-19.64102957802132,"{'estimator__model__max_depth': 8, 'estimator__model__max_features': 1.0, 'estimator__model__min_samples_leaf': 2, 'estimator__model__min_samples_split': 2, 'estimator__model__n_estimators': 300}"
+XGBoost,True,-17.122872322797775,"{'estimator__model__colsample_bytree': 1.0, 'estimator__model__learning_rate': 0.1, 'estimator__model__max_depth': 2, 'estimator__model__n_estimators': 1200, 'estimator__model__reg_lambda': 10.0, 'estimator__model__subsample': 0.8}"

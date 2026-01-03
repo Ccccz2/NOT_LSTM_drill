@@ -29,7 +29,7 @@ except Exception:
 # =========================
 # 0. 配置区（分类数据X与Y）
 # =========================
-DATA_PATH = r"cz_drill.xlsx"  # 运行脚本时放同目录；或写完整路径
+DATA_PATH = r"cz_drill.xlsx"
 COL_V   = "钻速(mm/s)"
 COL_W   = "角速度(1/s)"
 COL_F   = "推力(kN)"
@@ -49,8 +49,6 @@ TASKS = {
 }
 GROUP_COL_CANDIDATES = ["group", "Group", "GROUP", "set", "Set", "SET"]  # 若存在分组列则启用GroupKFold
 SEED = 42
-
-# 交叉验证设置：小样本建议
 N_SPLITS = 5
 
 
@@ -130,7 +128,7 @@ preprocess_noscale = ColumnTransformer(
 # =========================
 if groups is not None and groups.nunique() >= 2:
     cv_outer = GroupKFold(n_splits=min(N_SPLITS, groups.nunique()))
-    cv_for_search = cv_outer  # 为了小样本稳定，这里搜索也用同一cv
+    cv_for_search = cv_outer
     split_iter = cv_outer.split(X, y, groups=groups)
 else:
     cv_outer = KFold(n_splits=N_SPLITS, shuffle=True, random_state=SEED)
@@ -233,7 +231,7 @@ for task_name, spec in TASKS.items():
         pipe = cfg["pipeline"]
         grid = cfg["param_grid"]
 
-        # 用R2作为搜索目标（你也可以改成neg_root_mean_squared_error）
+        # 用R2作为搜索目标
         search = GridSearchCV(
             estimator=pipe,
             param_grid=grid,

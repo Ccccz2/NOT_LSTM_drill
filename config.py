@@ -65,7 +65,7 @@ MODEL_PARAMS = {
 # =========================
 # 自动调参(GridSearchCV)
 # =========================
-ENABLE_TUNING = True      # 先保持 False,run_all 接好后再改 True!!!!!!!!!!
+ENABLE_TUNING = True      # 先保持 False,run_all 接好后再改为True!!!!!!!!!!
 TUNING_SCORING = "r2"
 TUNING_N_JOBS = -1         # -1 用全部CPU
 

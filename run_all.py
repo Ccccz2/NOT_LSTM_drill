@@ -32,7 +32,11 @@ from utils.data import load_data, assert_columns, clean_xy
 from utils.cv import run_cv, wrap_multioutput
 from utils.tables import build_summary_table, save_latex_table, save_word_tables
 from utils.io import ensure_dir, setup_logger, save_config_snapshot
+from utils.params import save_hyperparams
+from utils.report import export_run_report
 
+tuning_dfs: list[pd.DataFrame] = []
+final_model_snapshots: list[dict] = []
 
 def tune_models(models: dict, X_df: pd.DataFrame, Y_df: pd.DataFrame,
                 cv, groups, cfg, logger, tag: str, out_dir: Path):
@@ -86,7 +90,14 @@ def tune_models(models: dict, X_df: pd.DataFrame, Y_df: pd.DataFrame,
         logger.info(f"[TUNING][{tag}] {name}: best_score={gs.best_score_:.4f}, best_params={gs.best_params_}")
 
     tuning_df = pd.DataFrame(rows)
-    out_path = out_dir / f"tuning_{tag}.csv"
+    safe_tag = (
+        tag.replace(":", "_")
+        .replace("->", "to")
+        .replace("[", "").replace("]", "")
+        .replace("|", "_").replace(" ", "")
+        .replace("/", "_")
+    )
+    out_path = out_dir / f"tuning_{safe_tag}.csv"
     tuning_df.to_csv(out_path, index=False, encoding="utf-8-sig")
     logger.info(f"[TUNING] saved: {out_path}")
 
@@ -185,9 +196,11 @@ def main():
         logger.info(f"[{task_name}] Running KFold (n_splits={CFG.KFOLD_SPLITS}) ...")
 
         models_for_run = models
+        tag = f"{task_name}_KFold"
+        eval_scheme = "KFold"
+
         if getattr(CFG, "ENABLE_TUNING", False):
-            tag = f"{task_name}_KFold"
-            models_for_run, _ = tune_models(
+            models_for_run, tuning_df = tune_models(
                 models=models,
                 X_df=X_df,
                 Y_df=Y_df,
@@ -198,6 +211,39 @@ def main():
                 tag=tag,
                 out_dir=paths["artifacts"],
             )
+            # 补齐维度列，方便汇总
+            tuning_dfs.append(tuning_df.assign(task=task_name, eval_scheme=eval_scheme, tag=tag))
+        else:
+            # 没调参也给占位表，保证 merged_report 不缺行
+            tuning_dfs.append(pd.DataFrame([{
+                "model": m, "tuned": False, "best_score": None, "best_params": None,
+                "task": task_name, "eval_scheme": eval_scheme, "tag": tag
+            } for m in models_for_run.keys()]))
+
+        # 记录最终模型快照（用于 final_params）
+        final_model_snapshots.append({
+            "task": task_name,
+            "eval_scheme": eval_scheme,
+            "tag": tag,
+            "models_for_run": models_for_run
+        })
+
+        #原内容
+        # models_for_run = models
+        # if getattr(CFG, "ENABLE_TUNING", False):
+        #     tag = f"{task_name}_KFold"
+        #     models_for_run, _ = tune_models(
+        #         models=models,
+        #         X_df=X_df,
+        #         Y_df=Y_df,
+        #         cv=kf,
+        #         groups=None,
+        #         cfg=CFG,
+        #         logger=logger,
+        #         tag=tag,
+        #         out_dir=paths["artifacts"],
+        #     )
+        save_hyperparams(models_for_run, paths["artifacts"], tag=f"{task_name}_KFold")  #保存超参数（best_estimator参数）
 
         long_k, oof_k = run_cv(
             X=X_df,
@@ -222,10 +268,11 @@ def main():
                 gkf = GroupKFold(n_splits=n_splits)
                 logger.info(f"[{task_name}] Running GroupKFold (n_splits={n_splits}, n_groups={n_groups}) ...")
 
-                models_for_run = models
+                tag = f"{task_name}_GroupKFold"
+                eval_scheme = "GroupKFold(UCS)"
+
                 if getattr(CFG, "ENABLE_TUNING", False):
-                    tag = f"{task_name}_GroupKFold"
-                    models_for_run, _ = tune_models(
+                    models_for_run, tuning_df = tune_models(
                         models=models,
                         X_df=X_df,
                         Y_df=Y_df,
@@ -236,6 +283,37 @@ def main():
                         tag=tag,
                         out_dir=paths["artifacts"],
                     )
+                    tuning_dfs.append(tuning_df.assign(task=task_name, eval_scheme=eval_scheme, tag=tag))
+                else:
+                    tuning_dfs.append(pd.DataFrame([{
+                        "model": m, "tuned": False, "best_score": None, "best_params": None,
+                        "task": task_name, "eval_scheme": eval_scheme, "tag": tag
+                    } for m in models.keys()]))
+
+                final_model_snapshots.append({
+                    "task": task_name,
+                    "eval_scheme": eval_scheme,
+                    "tag": tag,
+                    "models_for_run": models_for_run
+                })
+
+                #原内容
+                # models_for_run = models
+                # if getattr(CFG, "ENABLE_TUNING", False):
+                #     tag = f"{task_name}_GroupKFold"
+                #     models_for_run, _ = tune_models(
+                #         models=models,
+                #         X_df=X_df,
+                #         Y_df=Y_df,
+                #         cv=gkf,
+                #         groups=groups,
+                #         cfg=CFG,
+                #         logger=logger,
+                #         tag=tag,
+                #         out_dir=paths["artifacts"],
+                #     )
+
+                save_hyperparams(models_for_run, paths["artifacts"], tag=f"{task_name}_GroupKFold")  #保存超参数（best_estimator参数）
 
                 long_g, oof_g = run_cv(
                     X=X_df,
@@ -345,6 +423,16 @@ def main():
     cv_long.to_csv(long_csv_path, index=False, encoding="utf-8-sig")
     logger.info(f"Saved long CV results: {long_csv_path}")
 
+    # 导出总表 Excel（参数 + 调参 + 指标）
+    xlsx_path = export_run_report(
+        out_dir=paths["artifacts"],
+        cv_long=cv_long,
+        tuning_dfs=tuning_dfs,
+        final_model_snapshots=final_model_snapshots,
+        filename="hyperparams_all.xlsx",
+    )
+    logger.info(f"Saved run report: {xlsx_path}")
+
     # -----------------------
     # 5)构建summary table + export latex/word
     # -----------------------
@@ -391,6 +479,8 @@ def main():
     # Word：把所有表写进同一个 docx
     out_docx = paths["word_tables"] / "all_tables.docx"
     save_word_tables(all_tables, out_docx=str(out_docx))
+
+
 
 
 if __name__ == "__main__":

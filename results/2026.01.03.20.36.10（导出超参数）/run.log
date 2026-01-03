@@ -1,0 +1,35 @@
+2026-01-03 20:36:10,388 | INFO | === RUN START ===
+2026-01-03 20:36:10,388 | INFO | DATA_PATH: D:\Program Files x86\A Study File\mycode\NOT_LSTM\data\raw\cz_drill.xlsx
+2026-01-03 20:36:10,388 | INFO | OUT_DIR  : D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.20.36.10
+2026-01-03 20:36:10,578 | INFO | Loaded data: rows=36, cols=12
+2026-01-03 20:36:10,597 | INFO | Models: ['MLP', 'SVR', 'Random_Forest', 'XGBoost']
+2026-01-03 20:36:10,599 | INFO | [Task_A: 5->UCS] X=['钻速(mm/s)', '角速度(1/s)', '推力(kN)', '扭矩(N·m)', '岩石可钻性指数'], Y=['单轴抗压强度(MPa)'] | after clean: n=36
+2026-01-03 20:36:10,599 | INFO | [Task_A: 5->UCS] Running KFold (n_splits=5) ...
+2026-01-03 20:36:26,860 | INFO | [TUNING][Task_A: 5->UCS_KFold] MLP: best_score=0.7537, best_params={'model__activation': 'relu', 'model__alpha': 1e-05, 'model__hidden_layer_sizes': (64, 32, 16), 'model__learning_rate_init': 0.0005}
+2026-01-03 20:36:27,009 | INFO | [TUNING][Task_A: 5->UCS_KFold] SVR: best_score=0.8368, best_params={'model__C': 100, 'model__epsilon': 0.01, 'model__gamma': 'scale'}
+2026-01-03 20:37:44,084 | INFO | [TUNING][Task_A: 5->UCS_KFold] Random_Forest: best_score=0.9552, best_params={'model__max_depth': 3, 'model__max_features': 1.0, 'model__min_samples_leaf': 2, 'model__min_samples_split': 2, 'model__n_estimators': 300}
+2026-01-03 20:37:51,780 | INFO | [TUNING][Task_A: 5->UCS_KFold] XGBoost: best_score=0.9248, best_params={'model__colsample_bytree': 1.0, 'model__learning_rate': 0.1, 'model__max_depth': 4, 'model__n_estimators': 300, 'model__reg_lambda': 1.0, 'model__subsample': 0.8}
+2026-01-03 20:37:51,794 | INFO | [TUNING] saved: D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.20.36.10\artifacts\tuning_Task_A_5toUCS_KFold.csv
+2026-01-03 20:37:53,999 | INFO | [Task_A: 5->UCS] Running GroupKFold (n_splits=4, n_groups=4) ...
+2026-01-03 20:38:06,033 | INFO | [TUNING][Task_A: 5->UCS_GroupKFold] MLP: best_score=0.0000, best_params={'model__activation': 'relu', 'model__alpha': 1e-05, 'model__hidden_layer_sizes': (16,), 'model__learning_rate_init': 0.0005}
+2026-01-03 20:38:06,158 | INFO | [TUNING][Task_A: 5->UCS_GroupKFold] SVR: best_score=0.0000, best_params={'model__C': 1, 'model__epsilon': 0.01, 'model__gamma': 'scale'}
+2026-01-03 20:39:05,171 | INFO | [TUNING][Task_A: 5->UCS_GroupKFold] Random_Forest: best_score=0.0000, best_params={'model__max_depth': None, 'model__max_features': 'sqrt', 'model__min_samples_leaf': 1, 'model__min_samples_split': 2, 'model__n_estimators': 300}
+2026-01-03 20:39:11,146 | INFO | [TUNING][Task_A: 5->UCS_GroupKFold] XGBoost: best_score=0.0000, best_params={'model__colsample_bytree': 0.8, 'model__learning_rate': 0.01, 'model__max_depth': 2, 'model__n_estimators': 300, 'model__reg_lambda': 1.0, 'model__subsample': 0.8}
+2026-01-03 20:39:11,148 | INFO | [TUNING] saved: D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.20.36.10\artifacts\tuning_Task_A_5toUCS_GroupKFold.csv
+2026-01-03 20:39:14,129 | INFO | [Task_B: 4->[Id,UCS]] X=['钻速(mm/s)', '角速度(1/s)', '推力(kN)', '扭矩(N·m)'], Y=['岩石可钻性指数', '单轴抗压强度(MPa)'] | after clean: n=36
+2026-01-03 20:39:14,129 | INFO | [Task_B: 4->[Id,UCS]] Running KFold (n_splits=5) ...
+2026-01-03 20:39:33,912 | INFO | [TUNING][Task_B: 4->[Id,UCS]_KFold] MLP: best_score=0.1740, best_params={'estimator__model__activation': 'tanh', 'estimator__model__alpha': 0.001, 'estimator__model__hidden_layer_sizes': (16,), 'estimator__model__learning_rate_init': 0.0001}
+2026-01-03 20:39:34,091 | INFO | [TUNING][Task_B: 4->[Id,UCS]_KFold] SVR: best_score=0.7119, best_params={'estimator__model__C': 300, 'estimator__model__epsilon': 0.01, 'estimator__model__gamma': 'scale'}
+2026-01-03 20:42:01,996 | INFO | [TUNING][Task_B: 4->[Id,UCS]_KFold] Random_Forest: best_score=-0.1149, best_params={'estimator__model__max_depth': None, 'estimator__model__max_features': 1.0, 'estimator__model__min_samples_leaf': 1, 'estimator__model__min_samples_split': 2, 'estimator__model__n_estimators': 300}
+2026-01-03 20:42:18,359 | INFO | [TUNING][Task_B: 4->[Id,UCS]_KFold] XGBoost: best_score=0.1162, best_params={'estimator__model__colsample_bytree': 0.8, 'estimator__model__learning_rate': 0.05, 'estimator__model__max_depth': 2, 'estimator__model__n_estimators': 1200, 'estimator__model__reg_lambda': 10.0, 'estimator__model__subsample': 0.8}
+2026-01-03 20:42:18,361 | INFO | [TUNING] saved: D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.20.36.10\artifacts\tuning_Task_B_4toId,UCS_KFold.csv
+2026-01-03 20:42:34,625 | INFO | [Task_B: 4->[Id,UCS]] Running GroupKFold (n_splits=4, n_groups=4) ...
+2026-01-03 20:42:54,336 | INFO | [TUNING][Task_B: 4->[Id,UCS]_GroupKFold] MLP: best_score=-4.9290, best_params={'estimator__model__activation': 'tanh', 'estimator__model__alpha': 0.001, 'estimator__model__hidden_layer_sizes': (16,), 'estimator__model__learning_rate_init': 0.0001}
+2026-01-03 20:42:54,545 | INFO | [TUNING][Task_B: 4->[Id,UCS]_GroupKFold] SVR: best_score=-8.1624, best_params={'estimator__model__C': 10, 'estimator__model__epsilon': 0.01, 'estimator__model__gamma': 'scale'}
+2026-01-03 20:44:55,366 | INFO | [TUNING][Task_B: 4->[Id,UCS]_GroupKFold] Random_Forest: best_score=-19.6410, best_params={'estimator__model__max_depth': 8, 'estimator__model__max_features': 1.0, 'estimator__model__min_samples_leaf': 2, 'estimator__model__min_samples_split': 2, 'estimator__model__n_estimators': 300}
+2026-01-03 20:45:08,332 | INFO | [TUNING][Task_B: 4->[Id,UCS]_GroupKFold] XGBoost: best_score=-17.1229, best_params={'estimator__model__colsample_bytree': 1.0, 'estimator__model__learning_rate': 0.1, 'estimator__model__max_depth': 2, 'estimator__model__n_estimators': 1200, 'estimator__model__reg_lambda': 10.0, 'estimator__model__subsample': 0.8}
+2026-01-03 20:45:08,334 | INFO | [TUNING] saved: D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.20.36.10\artifacts\tuning_Task_B_4toId,UCS_GroupKFold.csv
+2026-01-03 20:45:24,178 | INFO | Saved OOF predictions: D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.20.36.10\artifacts\oof_predictions.csv
+2026-01-03 20:45:29,625 | INFO | Saved figures to: D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.20.36.10\figures
+2026-01-03 20:45:29,626 | INFO | Saved long CV results: D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.20.36.10\cv_results_long.csv
+2026-01-03 20:45:29,783 | INFO | Saved run report: D:\Program Files x86\A Study File\mycode\NOT_LSTM\results\2026.01.03.20.36.10\artifacts\hyperparams_all.xlsx

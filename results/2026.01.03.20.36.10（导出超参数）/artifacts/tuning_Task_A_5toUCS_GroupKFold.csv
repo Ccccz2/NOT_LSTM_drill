@@ -1,0 +1,5 @@
+﻿model,tuned,best_score,best_params
+MLP,True,0.0,"{'model__activation': 'relu', 'model__alpha': 1e-05, 'model__hidden_layer_sizes': (16,), 'model__learning_rate_init': 0.0005}"
+SVR,True,0.0,"{'model__C': 1, 'model__epsilon': 0.01, 'model__gamma': 'scale'}"
+Random_Forest,True,0.0,"{'model__max_depth': None, 'model__max_features': 'sqrt', 'model__min_samples_leaf': 1, 'model__min_samples_split': 2, 'model__n_estimators': 300}"
+XGBoost,True,0.0,"{'model__colsample_bytree': 0.8, 'model__learning_rate': 0.01, 'model__max_depth': 2, 'model__n_estimators': 300, 'model__reg_lambda': 1.0, 'model__subsample': 0.8}"

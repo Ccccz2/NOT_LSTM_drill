@@ -1,0 +1,5 @@
+﻿model,tuned,best_score,best_params
+MLP,True,0.7537312541038796,"{'model__activation': 'relu', 'model__alpha': 1e-05, 'model__hidden_layer_sizes': (64, 32, 16), 'model__learning_rate_init': 0.0005}"
+SVR,True,0.8367840173688137,"{'model__C': 100, 'model__epsilon': 0.01, 'model__gamma': 'scale'}"
+Random_Forest,True,0.9552312377319462,"{'model__max_depth': 3, 'model__max_features': 1.0, 'model__min_samples_leaf': 2, 'model__min_samples_split': 2, 'model__n_estimators': 300}"
+XGBoost,True,0.9248325144986748,"{'model__colsample_bytree': 1.0, 'model__learning_rate': 0.1, 'model__max_depth': 4, 'model__n_estimators': 300, 'model__reg_lambda': 1.0, 'model__subsample': 0.8}"
